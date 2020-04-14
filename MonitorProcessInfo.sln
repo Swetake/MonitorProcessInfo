@@ -1,0 +1,58 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29920.165
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MonitorProcessInfo", "MonitorProcessInfo", "{A7AB91FD-839F-4179-BC6F-C0112449EF9E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonitorProcessInfo", "MonitorProcessInfo\MonitorProcessInfo\MonitorProcessInfo.csproj", "{B37BA819-F6AB-42E9-ACC9-7AB359ACFE44}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonitorProcessInfo.Activities", "MonitorProcessInfo\MonitorProcessInfo.Activities\MonitorProcessInfo.Activities.csproj", "{C763128A-551F-4D7B-A5DE-24E1DBE7CE9E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonitorProcessInfo.Activities.Design", "MonitorProcessInfo\MonitorProcessInfo.Activities.Design\MonitorProcessInfo.Activities.Design.csproj", "{6CFCB265-0DB5-49CC-A218-66CD32A2F193}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{687ECC3C-06CB-4EC7-A011-285C307B5672}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "UiPath.Shared.Activities", "Shared\UiPath.Shared.Activities\UiPath.Shared.Activities.shproj", "{4546856D-EA50-45C6-9419-EEEACB5A80AA}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "UiPath.Shared.Activities.Design", "Shared\UiPath.Shared.Activities.Design\UiPath.Shared.Activities.Design.shproj", "{DF9C43F0-ADD3-4FBF-995E-84B92F9CBF25}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Shared\UiPath.Shared.Activities\UiPath.Shared.Activities.projitems*{4546856d-ea50-45c6-9419-eeeacb5a80aa}*SharedItemsImports = 13
+		Shared\UiPath.Shared.Activities.Design\UiPath.Shared.Activities.Design.projitems*{6cfcb265-0db5-49cc-a218-66cd32a2f193}*SharedItemsImports = 5
+		Shared\UiPath.Shared.Activities\UiPath.Shared.Activities.projitems*{c763128a-551f-4d7b-a5de-24e1dbe7ce9e}*SharedItemsImports = 5
+		Shared\UiPath.Shared.Activities.Design\UiPath.Shared.Activities.Design.projitems*{df9c43f0-add3-4fbf-995e-84b92f9cbf25}*SharedItemsImports = 13
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B37BA819-F6AB-42E9-ACC9-7AB359ACFE44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B37BA819-F6AB-42E9-ACC9-7AB359ACFE44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B37BA819-F6AB-42E9-ACC9-7AB359ACFE44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B37BA819-F6AB-42E9-ACC9-7AB359ACFE44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C763128A-551F-4D7B-A5DE-24E1DBE7CE9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C763128A-551F-4D7B-A5DE-24E1DBE7CE9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C763128A-551F-4D7B-A5DE-24E1DBE7CE9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C763128A-551F-4D7B-A5DE-24E1DBE7CE9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CFCB265-0DB5-49CC-A218-66CD32A2F193}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CFCB265-0DB5-49CC-A218-66CD32A2F193}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CFCB265-0DB5-49CC-A218-66CD32A2F193}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CFCB265-0DB5-49CC-A218-66CD32A2F193}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B37BA819-F6AB-42E9-ACC9-7AB359ACFE44} = {A7AB91FD-839F-4179-BC6F-C0112449EF9E}
+		{C763128A-551F-4D7B-A5DE-24E1DBE7CE9E} = {A7AB91FD-839F-4179-BC6F-C0112449EF9E}
+		{6CFCB265-0DB5-49CC-A218-66CD32A2F193} = {A7AB91FD-839F-4179-BC6F-C0112449EF9E}
+		{4546856D-EA50-45C6-9419-EEEACB5A80AA} = {687ECC3C-06CB-4EC7-A011-285C307B5672}
+		{DF9C43F0-ADD3-4FBF-995E-84B92F9CBF25} = {687ECC3C-06CB-4EC7-A011-285C307B5672}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {49C73175-3B50-48AC-B27F-0DE93BFED2AD}
+	EndGlobalSection
+EndGlobal
