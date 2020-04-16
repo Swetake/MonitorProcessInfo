@@ -9,11 +9,11 @@
   <PropertyGroup>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Description>UiPath Activity Package for monitoring system/process resource</Description>
+    <Description>This activities package provides function to monitor resource information for whole the system and specific processes. Then we can have a chance to avoid unexpected matter at safe point in advance if check some value shows less resource. It's also useful to check resource in trouble shooting.</Description>
     <Authors>Yoichi Suetake</Authors>
     <Company></Company>
     <Copyright>@ 2020 Yoichi Suetake</Copyright>
-    <PackageTags>UiPath Activit𝗒</PackageTags>
+    <PackageTags>UiPath Activit𝗒 CPU Memory System Process Monitor</PackageTags>
     <PackageProjectUrl>https://github.com/Swetake/MonitorProcessInfo</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/NuGet/Samples/master/PackageIconNuspecExample/icon.png</PackageIconUrl>
     <PackageIcon>packageIcon.png</PackageIcon>
@@ -30,7 +30,7 @@
     <PackageVersion>0.1.0.$([System.DateTime]::UtcNow.ToString(MMddHmmss))</PackageVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <PackageVersion>1.0.0</PackageVersion>
+    <PackageVersion>1.0.0.1</PackageVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Designers\GetCurrentProcessDesigner.xaml" />
