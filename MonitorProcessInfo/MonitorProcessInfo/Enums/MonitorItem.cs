@@ -71,6 +71,18 @@ namespace MonitorProcessInfo
         /// </summary>
         ProcessWorkingSetMA,
 
+
+        /// <summary>
+        /// PrivateMemorySize
+        /// </summary>
+        ProcessPrivateMemorySize,
+
+        /// <summary>
+        /// PrivateMemorySizeMovingAverage
+        /// </summary>
+        ProcessPrivateMemorySizeMA,
+
+
         /// <summary>
         /// TotalManagedMemory
         /// </summary>

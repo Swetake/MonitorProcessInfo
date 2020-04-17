@@ -27,6 +27,8 @@ namespace MonitorProcessInfo
         private const string NO_PROCESS_TIMESTRNIG = "00000000000000";
 
         private const int EACH_CPU_MEM_FILE_COUNT = 4;
+
+        private const int MAX_COUNT_OF_PROCESSES = 32;
         /// <summary>
         /// Max cpu count
         /// </summary>
@@ -57,7 +59,7 @@ namespace MonitorProcessInfo
             List<Process> listPs = new List<Process>();
 
             Dictionary<int, Dictionary<string, Queue<ulong>>> multiCalcuDict = new Dictionary<int, Dictionary<string, Queue<ulong>>>();
-            Dictionary<int, ulong> movingAverageSum = new Dictionary<int, ulong>();
+
             Dictionary<int, ulong> continuousNonResponding = new Dictionary<int, ulong>();
 
             Dictionary<int, MemoryMappedFile> mmfDict = new Dictionary<int, MemoryMappedFile>();
@@ -94,7 +96,8 @@ namespace MonitorProcessInfo
             List<Process> listPs = new List<Process>();
 
             Dictionary<int, Dictionary<string, Queue<ulong>>> multiCalcuDict = new Dictionary<int, Dictionary<string, Queue<ulong>>>();
-            Dictionary<int, ulong> movingAverageSum = new Dictionary<int, ulong>();
+            Dictionary<int, ulong> movingAverageWsSum = new Dictionary<int, ulong>();
+            Dictionary<int, ulong> movingAveragePmSum = new Dictionary<int, ulong>();
             Dictionary<int, ulong> continuousNonResponding = new Dictionary<int, ulong>();
 
             Dictionary<int, MemoryMappedFile> mmfDict = new Dictionary<int, MemoryMappedFile>();
@@ -106,7 +109,7 @@ namespace MonitorProcessInfo
 
 
             Queue<ulong> cpuQueue = new Queue<ulong>();
-            movingAverageSum[CPU_TOTAL] = 0;
+            movingAverageWsSum[CPU_TOTAL] = 0;
 
             // Main loop
 
@@ -164,6 +167,12 @@ namespace MonitorProcessInfo
                             int pid;
                             string pStartTime;
                             Process p;
+
+                            if (processIdList.Count() > MAX_COUNT_OF_PROCESSES)
+                            {
+                                throw new Exception(Resources.ExceptionMsgExceededProcesses);
+                            }
+
                             if (processIdList[index]==0) {
                                 pid = NO_PROCESS;
                                 pStartTime = NO_PROCESS_TIMESTRNIG;
@@ -182,7 +191,9 @@ namespace MonitorProcessInfo
                                 multiCalcuDict.Add(pid, new Dictionary<string, Queue<ulong>>());
                                 multiCalcuDict[pid][MonitorItem.ProcessWorkingSet.ToString()] = new Queue<ulong>();
                                 multiCalcuDict[pid][MonitorItem.ProcessTotalProcessorTime.ToString()] = new Queue<ulong>();
-                                movingAverageSum[pid] = 0;
+                                multiCalcuDict[pid][MonitorItem.ProcessPrivateMemorySize.ToString()] = new Queue<ulong>();
+                                movingAverageWsSum[pid] = 0;
+                                movingAveragePmSum[pid] = 0;
                                 continuousNonResponding[pid] = 0;
                                 listPs.Add(p);
                             }
@@ -215,11 +226,11 @@ namespace MonitorProcessInfo
                     ulong systemCpuMA=0;
 
                     cpuQueue.Enqueue(systemCpu);
-                    movingAverageSum[CPU_TOTAL] += systemCpu;
+                    movingAverageWsSum[CPU_TOTAL] += systemCpu;
                     if (cpuQueue.Count >= number)
                     {
-                        movingAverageSum[CPU_TOTAL] -= cpuQueue.Dequeue();
-                        systemCpuMA = (ulong)movingAverageSum[CPU_TOTAL] / (ulong)number;
+                        movingAverageWsSum[CPU_TOTAL] -= cpuQueue.Dequeue();
+                        systemCpuMA = (ulong)movingAverageWsSum[CPU_TOTAL] / (ulong)number;
                     }
 
 
@@ -329,24 +340,43 @@ namespace MonitorProcessInfo
                             // Calculate Moving Average of Workingset
                             ulong workingsetMa = 0;
                             multiCalcuDict[pid][MonitorItem.ProcessWorkingSet.ToString()].Enqueue(workingset);
-                            movingAverageSum[pid] += workingset;
+                            movingAverageWsSum[pid] += workingset;
                             if (multiCalcuDict[pid][MonitorItem.ProcessWorkingSet.ToString()].Count >= number)
                             {
-                                movingAverageSum[pid] -= multiCalcuDict[pid][MonitorItem.ProcessWorkingSet.ToString()].Dequeue();
-                                workingsetMa = (ulong)movingAverageSum[pid] / (ulong)number;
+                                movingAverageWsSum[pid] -= multiCalcuDict[pid][MonitorItem.ProcessWorkingSet.ToString()].Dequeue();
+                                workingsetMa = (ulong)movingAverageWsSum[pid] / (ulong)number;
                             }
                             writeValueList.Add(workingsetMa);  // #11
 
 
+                            // Get PrivateMemorySize
+                            var privatememory = (ulong)p.PrivateMemorySize64;
+                            writeValueList.Add(privatememory);  // #12
+
+                            //Get PrivateMemorySizeMA
+                            ulong privateMemoryMa = 0;
+                            multiCalcuDict[pid][MonitorItem.ProcessPrivateMemorySize.ToString()].Enqueue(privatememory);
+                            movingAveragePmSum[pid] += privatememory;
+                            if (multiCalcuDict[pid][MonitorItem.ProcessPrivateMemorySize.ToString()].Count >= number)
+                            {
+                                movingAveragePmSum[pid] -= multiCalcuDict[pid][MonitorItem.ProcessPrivateMemorySize.ToString()].Dequeue();
+                                privateMemoryMa = (ulong)movingAveragePmSum[pid] / (ulong)number;
+                            }
+                            writeValueList.Add(privateMemoryMa);  // #13
+
+
+
+
+
                             // TotalManagedMemoryFromGC
                             var totalMangedMemory = (ulong)GC.GetTotalMemory(false);
-                            writeValueList.Add(totalMangedMemory);  // #12
+                            writeValueList.Add(totalMangedMemory);  // #14
 
 
 
                             // Get Cputime
                             var cpuTotalTime = (ulong)(p.TotalProcessorTime.TotalMilliseconds);
-                            writeValueList.Add(cpuTotalTime);  // #13
+                            writeValueList.Add(cpuTotalTime);  // #15
 
 
                             // Calculate Delta CpuTime
@@ -356,11 +386,11 @@ namespace MonitorProcessInfo
                             {
                                 cpuTotalTimeDelta = cpuTotalTime - multiCalcuDict[pid][MonitorItem.ProcessTotalProcessorTime.ToString()].Dequeue();
                             }
-                            writeValueList.Add(cpuTotalTimeDelta);  // #14
+                            writeValueList.Add(cpuTotalTimeDelta);  // #16
 
                             //Check Responding
                             var responding = p.Responding;
-                            writeValueList.Add((ulong)(responding ? 1 : 0)); // #15
+                            writeValueList.Add((ulong)(responding ? 1 : 0)); // #17
 
                             if (!responding)
                             {
@@ -370,7 +400,7 @@ namespace MonitorProcessInfo
                             {
                                 continuousNonResponding[pid] = 0;
                             }
-                            writeValueList.Add(continuousNonResponding[pid]);  //#16
+                            writeValueList.Add(continuousNonResponding[pid]);  //#18
 
                         }
                         else

@@ -305,10 +305,10 @@
     <value>ProcessTotalMangedMemory</value>
   </data>
   <data name="GetMonitoredValue_ProcessTotalProcessorTimeDelta_Description" xml:space="preserve">
-    <value>ProcessorTotalTimeDelta (msec)</value>
+    <value>ProcessTotalProcessorTimeDelta (msec)</value>
   </data>
   <data name="GetMonitoredValue_ProcessTotalProcessorTimeDelta_DisplayName" xml:space="preserve">
-    <value>ProcessorTotalTimeDelta</value>
+    <value>ProcessTotalPTimeDelta</value>
   </data>
   <data name="GetMonitoredValue_ProcessTotalProcessorTime_Description" xml:space="preserve">
     <value>ProcessTotalProcessorTime (msec)</value>
@@ -375,5 +375,17 @@
   </data>
   <data name="System_Category" xml:space="preserve">
     <value>Output - System</value>
+  </data>
+  <data name="GetMonitoredValue_ProcessPrivateMemorySizeMA_Description" xml:space="preserve">
+    <value>Moving Average of Private Memory Size (byte) </value>
+  </data>
+  <data name="GetMonitoredValue_ProcessPrivateMemorySizeMA_DisplayName" xml:space="preserve">
+    <value>ProcessPrivateMemorySizeMA</value>
+  </data>
+  <data name="GetMonitoredValue_ProcessPrivateMemorySize_Description" xml:space="preserve">
+    <value>Private Memory Size (byte)</value>
+  </data>
+  <data name="GetMonitoredValue_ProcessPrivateMemorySize_DisplayName" xml:space="preserve">
+    <value>ProcessPrivateMemorySize</value>
   </data>
 </root>

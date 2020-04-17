@@ -125,6 +125,24 @@ namespace MonitorProcessInfo.Activities
 
 
         /// <summary>
+        /// ProcessWorkingSet
+        /// </summary>
+        [LocalizedDisplayName(nameof(Resources.GetMonitoredValue_ProcessPrivateMemorySize_DisplayName))]
+        [LocalizedDescription(nameof(Resources.GetMonitoredValue_ProcessPrivateMemorySize_Description))]
+        [LocalizedCategory(nameof(Resources.Process_Category))]
+        public OutArgument<ulong> ProcessPrivateMemorySize { get; set; }
+
+        /// <summary>
+        /// ProcessWorkingSetMA
+        /// </summary>
+        [LocalizedDisplayName(nameof(Resources.GetMonitoredValue_ProcessPrivateMemorySizeMA_DisplayName))]
+        [LocalizedDescription(nameof(Resources.GetMonitoredValue_ProcessPrivateMemorySizeMA_Description))]
+        [LocalizedCategory(nameof(Resources.Process_Category))]
+        public OutArgument<ulong> ProcessPrivateMemorySizeMA { get; set; }
+
+
+
+        /// <summary>
         /// TotalManagedMemory
         /// </summary>
         [LocalizedDisplayName(nameof(Resources.GetMonitoredValue_ProcessTotalManagedMemory_DisplayName))]
@@ -235,6 +253,9 @@ namespace MonitorProcessInfo.Activities
 
                 ProcessWorkingSet.Set(ctx, ret[MonitorItem.ProcessWorkingSet]);
                 ProcessWorkingSetMA.Set(ctx, ret[MonitorItem.ProcessWorkingSetMA]);
+                ProcessPrivateMemorySize.Set(ctx, ret[MonitorItem.ProcessPrivateMemorySize]);
+                ProcessPrivateMemorySizeMA.Set(ctx, ret[MonitorItem.ProcessPrivateMemorySizeMA]);
+
                 ProcessTotalManagedMemory.Set(ctx, ret[MonitorItem.ProcessTotalManagedMemory]);
                 ProcessTotalProcessorTime.Set(ctx, ret[MonitorItem.ProcessTotalProcessorTime]);
                 ProcessTotalProcessorTimeDelta.Set(ctx, ret[MonitorItem.ProcessTotalProcessorTimeDelta]);

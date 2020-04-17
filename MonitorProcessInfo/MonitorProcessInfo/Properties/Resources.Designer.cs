@@ -61,6 +61,15 @@ namespace MonitorProcessInfo.Properties {
         }
         
         /// <summary>
+        ///   Exceeded number of processes に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string ExceptionMsgExceededProcesses {
+            get {
+                return ResourceManager.GetString("ExceptionMsgExceededProcesses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Invalid time format に類似しているローカライズされた文字列を検索します。
         /// </summary>
         public static string ExceptionMsgInvalidTimeFormat {

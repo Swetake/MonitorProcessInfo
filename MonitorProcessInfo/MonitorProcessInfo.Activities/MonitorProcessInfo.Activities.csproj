@@ -27,7 +27,7 @@
     <Reference Include="System.Windows" />
     <Reference Include="System.Xaml" />
     <Reference Include="UiPath.UiAutomation.Activities">
-      <HintPath>..\..\..\..\..\.nuget\packages\uipath.uiautomation.activities\18.4.6\lib\net461\UiPath.UiAutomation.Activities.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\.nuget\packages\uipath.uiautomation.activities\18.4.6\lib\net461\UiPath.UiAutomation.Activities.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="WindowsBase" />

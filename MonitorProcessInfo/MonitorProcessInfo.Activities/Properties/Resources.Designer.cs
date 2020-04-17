@@ -178,6 +178,42 @@ namespace MonitorProcessInfo.Activities.Properties {
         }
         
         /// <summary>
+        ///   Private Memory Size (byte) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string GetMonitoredValue_ProcessPrivateMemorySize_Description {
+            get {
+                return ResourceManager.GetString("GetMonitoredValue_ProcessPrivateMemorySize_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   ProcessPrivateMemorySize に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string GetMonitoredValue_ProcessPrivateMemorySize_DisplayName {
+            get {
+                return ResourceManager.GetString("GetMonitoredValue_ProcessPrivateMemorySize_DisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Moving Average of Private Memory Size (byte)  に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string GetMonitoredValue_ProcessPrivateMemorySizeMA_Description {
+            get {
+                return ResourceManager.GetString("GetMonitoredValue_ProcessPrivateMemorySizeMA_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   ProcessPrivateMemorySizeMA に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string GetMonitoredValue_ProcessPrivateMemorySizeMA_DisplayName {
+            get {
+                return ResourceManager.GetString("GetMonitoredValue_ProcessPrivateMemorySizeMA_DisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   ProcessResponding に類似しているローカライズされた文字列を検索します。
         /// </summary>
         public static string GetMonitoredValue_ProcessResponding_Description {
@@ -250,7 +286,7 @@ namespace MonitorProcessInfo.Activities.Properties {
         }
         
         /// <summary>
-        ///   ProcessorTotalTimeDelta (msec) に類似しているローカライズされた文字列を検索します。
+        ///   ProcessTotalProcessorTimeDelta (msec) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         public static string GetMonitoredValue_ProcessTotalProcessorTimeDelta_Description {
             get {
@@ -259,7 +295,7 @@ namespace MonitorProcessInfo.Activities.Properties {
         }
         
         /// <summary>
-        ///   ProcessorTotalTimeDelta に類似しているローカライズされた文字列を検索します。
+        ///   ProcessTotalPTimeDelta に類似しているローカライズされた文字列を検索します。
         /// </summary>
         public static string GetMonitoredValue_ProcessTotalProcessorTimeDelta_DisplayName {
             get {
