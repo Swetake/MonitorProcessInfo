@@ -529,7 +529,12 @@ namespace MonitorProcessInfo
                     }
                 }
             }
-
+            if (!logging)
+            {
+                Thread.Sleep(100);
+                System.IO.File.Delete(fileNameProcLog);
+                System.IO.File.Delete(fileNameSysLog);
+            }
             //Termination
             foreach(MemoryMappedFile mmf in mmfDict.Values)
             {
