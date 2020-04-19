@@ -125,7 +125,7 @@ namespace MonitorProcessInfo.Activities
 
 
         /// <summary>
-        /// ProcessWorkingSet
+        /// ProcessPrivateMemorySize
         /// </summary>
         [LocalizedDisplayName(nameof(Resources.GetMonitoredValue_ProcessPrivateMemorySize_DisplayName))]
         [LocalizedDescription(nameof(Resources.GetMonitoredValue_ProcessPrivateMemorySize_Description))]
@@ -133,7 +133,7 @@ namespace MonitorProcessInfo.Activities
         public OutArgument<ulong> ProcessPrivateMemorySize { get; set; }
 
         /// <summary>
-        /// ProcessWorkingSetMA
+        /// ProcessPrivateMemorySizeMA
         /// </summary>
         [LocalizedDisplayName(nameof(Resources.GetMonitoredValue_ProcessPrivateMemorySizeMA_DisplayName))]
         [LocalizedDescription(nameof(Resources.GetMonitoredValue_ProcessPrivateMemorySizeMA_Description))]

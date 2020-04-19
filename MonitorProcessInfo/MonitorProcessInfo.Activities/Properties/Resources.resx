@@ -388,4 +388,16 @@
   <data name="GetMonitoredValue_ProcessPrivateMemorySize_DisplayName" xml:space="preserve">
     <value>ProcessPrivateMemorySize</value>
   </data>
+  <data name="MonitorProcessInfoScope_LogDirectory_Description" xml:space="preserve">
+    <value>Director for logging</value>
+  </data>
+  <data name="MonitorProcessInfoScope_LogDirectory_DisplayName" xml:space="preserve">
+    <value>LogDirectory</value>
+  </data>
+  <data name="MonitorProcessInfoScope_Logging_Description" xml:space="preserve">
+    <value>Enable logging or not</value>
+  </data>
+  <data name="MonitorProcessInfoScope_Logging_DisplayName" xml:space="preserve">
+    <value>Logging</value>
+  </data>
 </root>

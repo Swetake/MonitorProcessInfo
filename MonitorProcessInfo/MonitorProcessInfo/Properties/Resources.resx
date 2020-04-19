@@ -132,6 +132,12 @@
   <data name="ExceptionMsgSameIdButNotSameStarttime" xml:space="preserve">
     <value>The process has same ID but not same Starttime.</value>
   </data>
+  <data name="LogHeaderProcess" xml:space="preserve">
+    <value>DateTime,PID,WorkingSet,WorkingSetMA,PrivteMemory,PrivateMemoryMA,TotalManagedMemory,CpuTotalTime,CpuTotalTimeDelta,Responding,ContinuousNonResponding</value>
+  </data>
+  <data name="LogHeaderSystem" xml:space="preserve">
+    <value>DateTime,CPU,CPU MA,CPU00-07,CPU08-15,CPU16-23,CPU24-31,TotalPhysicalMemory,AvailablePhysicalMemory,TotalVirtualMemory,AvailableVirtualMemory</value>
+  </data>
   <data name="OrderMemFileName" xml:space="preserve">
     <value>MPI_Order</value>
   </data>

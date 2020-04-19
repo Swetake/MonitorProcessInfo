@@ -52,7 +52,23 @@ namespace MonitorProcessInfo.Activities
         [LocalizedDescription(nameof(Resources.MonitorProcessInfoScope_Number_Description))]
         public InArgument<int> Number { get; set; } = 5;
 
+        /// <summary>
+        /// Logging
+        /// </summary>
+        [LocalizedCategory(nameof(Resources.Input_Category))]
+        [LocalizedDisplayName(nameof(Resources.MonitorProcessInfoScope_Logging_DisplayName))]
+        [LocalizedDescription(nameof(Resources.MonitorProcessInfoScope_Logging_Description))]
 
+        public InArgument<bool> Logging { get; set; } = false;
+
+        /// <summary>
+        /// Logging
+        /// </summary>
+        [LocalizedCategory(nameof(Resources.Input_Category))]
+        [LocalizedDisplayName(nameof(Resources.MonitorProcessInfoScope_LogDirectory_DisplayName))]
+        [LocalizedDescription(nameof(Resources.MonitorProcessInfoScope_LogDirectory_Description))]
+
+        public InArgument<string> LogDirectory { get; set; }
 
         // A tag used to identify the scope in the activity context
         internal static string ParentContainerPropertyTag => "ScopeActivity";
@@ -135,8 +151,17 @@ namespace MonitorProcessInfo.Activities
         {
             var interval = Interval.Get(context);
             var number = Number.Get(context);
+            var logging = Logging.Get(context);
+            var logDirectory = LogDirectory.Get(context);
 
-            MonitorProcess mi = new MonitorProcess(interval,number);
+            if (String.IsNullOrEmpty(logDirectory))
+            {
+                logDirectory = System.Environment.CurrentDirectory;
+            }
+
+            MonitorProcess mi = new MonitorProcess(interval,number,logging,logDirectory);
+
+
 
             return (ctx) => {
                 // Schedule child activities

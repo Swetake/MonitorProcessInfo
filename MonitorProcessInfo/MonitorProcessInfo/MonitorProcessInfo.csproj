@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net461</TargetFrameworks>
 		<RootNamespace>MonitorProcessInfo</RootNamespace>
@@ -7,7 +7,7 @@
   <PropertyGroup>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <DocumentationFile>bin\$(Configuration)\MonitorProcessInfo.xml</DocumentationFile>
-    <Version>1.0.1</Version>
+    <Version>1.1.1</Version>
   </PropertyGroup>
 	<ItemGroup>
 		<Reference Include="Microsoft.VisualBasic" />
@@ -26,7 +26,7 @@
     <Reference Include="System.Windows" />
     <Reference Include="System.Xaml" />
     <Reference Include="UiPath.UiAutomation.Activities">
-      <HintPath>..\..\..\..\..\..\.nuget\packages\uipath.uiautomation.activities\18.4.6\lib\net461\UiPath.UiAutomation.Activities.dll</HintPath>
+      <HintPath>..\..\..\..\..\.nuget\packages\uipath.uiautomation.activities\18.4.6\lib\net461\UiPath.UiAutomation.Activities.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="WindowsBase" />

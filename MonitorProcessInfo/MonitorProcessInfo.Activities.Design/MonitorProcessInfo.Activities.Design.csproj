@@ -17,8 +17,8 @@
     <PackageProjectUrl>https://github.com/Swetake/MonitorProcessInfo</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/NuGet/Samples/master/PackageIconNuspecExample/icon.png</PackageIconUrl>
     <PackageIcon>packageIcon.png</PackageIcon>
-    <AssemblyVersion>1.0.1.0</AssemblyVersion>
-    <FileVersion>1.0.1.0</FileVersion>
+    <AssemblyVersion>1.1.1.0</AssemblyVersion>
+    <FileVersion>1.1.1.0</FileVersion>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <dependencies>
@@ -30,7 +30,7 @@
     <PackageVersion>0.1.1.$([System.DateTime]::UtcNow.ToString(MMddHmmss))</PackageVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <PackageVersion>1.1.0</PackageVersion>
+    <PackageVersion>1.1.1</PackageVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Designers\GetCurrentProcessDesigner.xaml" />

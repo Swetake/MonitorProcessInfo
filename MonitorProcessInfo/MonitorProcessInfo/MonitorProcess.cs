@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;	
 using System.IO.MemoryMappedFiles;
+using System.IO;
 using System.Threading;
 using System.Diagnostics;
 using MonitorProcessInfo;
@@ -36,15 +37,23 @@ namespace MonitorProcessInfo
 
         private int interval;
         private int number;
+        private bool logging;
+        private string logDirectory;
+
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="_interval"></param>
         /// <param name="_number"></param>
-        public MonitorProcess(int _interval, int _number)
+        /// <param name="_logging"></param>
+        /// <param name="_logDirectory"></param>
+        public MonitorProcess(int _interval, int _number, bool _logging, string _logDirectory)
         {
             interval = _interval;
             number = _number;
+            logging = _logging;
+            logDirectory = _logDirectory;
+
             var task = InitializeAsync();
         }
 
@@ -111,7 +120,7 @@ namespace MonitorProcessInfo
             Queue<ulong> cpuQueue = new Queue<ulong>();
             movingAverageWsSum[CPU_TOTAL] = 0;
 
-            // Main loop
+            // Main loop preparation
 
             List<int> processIdList;
             List<string> startTimeList;
@@ -135,299 +144,391 @@ namespace MonitorProcessInfo
                 indedCpuCounter++;
             }
 
+            string fileNameSysLog = System.IO.Path.Combine(logDirectory, "MPI_SYS_"+System.DateTime.Now.ToString("yyyyMMdd-HHmmss")+".log");
+            string fileNameProcLog = System.IO.Path.Combine(logDirectory, "MPI_PROC_" + System.DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".log");
+            StringBuilder sbSysLog = new StringBuilder();
+            StringBuilder sbProcLog = new StringBuilder();
 
-            while (!shouldExit)
+            //Logging
+            using (var writerSystemLog = new StreamWriter(fileNameSysLog))
             {
-                counter++;
-
-                //Check Order
-                byte[] arraydata = new byte[ORDER_MEM_FILE_SIZE];
-                byte[] arrayzero = new byte[ORDER_MEM_FILE_SIZE];
-                using (MemoryMappedViewAccessor accessor = orderMmf.CreateViewAccessor())
+                using (var writerProcessLog = new StreamWriter(fileNameProcLog))
                 {
-                    accessor.ReadArray<byte>(0, arraydata, 0, ORDER_MEM_FILE_SIZE);
-                    accessor.WriteArray<byte>(0, arrayzero, 0, ORDER_MEM_FILE_SIZE);
-                }
-
-                // Check Order
-                processIdList = new List<int>();
-                startTimeList = new List<string>();
-                orderList = new List<int>();
-                ExtractOrderInfoFromByteArray(arraydata, ref orderList, ref processIdList, ref startTimeList);
-
-                int index = 0;
-                while (index < orderList.Count())
-                {
-                    int order = orderList[index];
-                    if (order == 0) { break; }
-                    switch (order)
+                    if (logging)
                     {
-                        case (int)Order.Add:
-                            //Create mmf for target process
-                            int pid;
-                            string pStartTime;
-                            Process p;
-
-                            if (processIdList.Count() > MAX_COUNT_OF_PROCESSES)
-                            {
-                                throw new Exception(Resources.ExceptionMsgExceededProcesses);
-                            }
-
-                            if (processIdList[index]==0) {
-                                pid = NO_PROCESS;
-                                pStartTime = NO_PROCESS_TIMESTRNIG;
-                                p = null;
-                            } else {
-                                p = System.Diagnostics.Process.GetProcessById(processIdList[index]);
-                                pid = p.Id;
-                                pStartTime = p.StartTime.ToString(PROC_INFO_MEM_FILE_TIMEFORMAT);
-                            }
+                        await writerSystemLog.WriteLineAsync(Resources.LogHeaderSystem);
+                        await writerProcessLog.WriteLineAsync(Resources.LogHeaderProcess);
 
 
-                            if (pStartTime == startTimeList[index])
-                            {
-                                var memFileName = Resources.PrefixMemFileName + pid.ToString() + "_" + startTimeList[index];
-                                mmfDict[processIdList[index]] = MemoryMappedFile.CreateNew(memFileName, PROC_INFO_MEM_FILE_SIZE);
-                                multiCalcuDict.Add(pid, new Dictionary<string, Queue<ulong>>());
-                                multiCalcuDict[pid][MonitorItem.ProcessWorkingSet.ToString()] = new Queue<ulong>();
-                                multiCalcuDict[pid][MonitorItem.ProcessTotalProcessorTime.ToString()] = new Queue<ulong>();
-                                multiCalcuDict[pid][MonitorItem.ProcessPrivateMemorySize.ToString()] = new Queue<ulong>();
-                                movingAverageWsSum[pid] = 0;
-                                movingAveragePmSum[pid] = 0;
-                                continuousNonResponding[pid] = 0;
-                                listPs.Add(p);
-                            }
-                            else
-                            {
-                                throw (new Exception(Resources.ExceptionMsgSameIdButNotSameStarttime));
-                            }
-                            break;
-
-                        case (int)Order.Terminate:
-                            shouldExit = true;
-                            break;
                     }
-                    index++;
-                }
-
-               
-                if (counter >= v)
-                {
-                    counter = 0;
-                    List<Process> nonexistsProcesses = new List<Process>();
-                    // Start to Get Info
-
-                    //System value
-
-                    //Checking System CPU Total
-                    ulong systemCpu = (ulong)(pcCpuTotal.NextValue()*100);
-
-                    //Checking System CPU MA
-                    ulong systemCpuMA=0;
-
-                    cpuQueue.Enqueue(systemCpu);
-                    movingAverageWsSum[CPU_TOTAL] += systemCpu;
-                    if (cpuQueue.Count >= number)
+                    //Main loop
+                    while (!shouldExit)
                     {
-                        movingAverageWsSum[CPU_TOTAL] -= cpuQueue.Dequeue();
-                        systemCpuMA = (ulong)movingAverageWsSum[CPU_TOTAL] / (ulong)number;
-                    }
+                        counter++;
 
-
-
-
-                    //Each CPU
-                    ulong[] eachCpu = new ulong[EACH_CPU_MEM_FILE_COUNT];
-
-                    int cpuIndex = 0;
-                    int fileIndex = 0;
-                    while (cpuIndex< pcCpuCounterArray.Length)
-                    {
-                        float tempCpu = pcCpuCounterArray[cpuIndex].NextValue();
-                        int shift = (cpuIndex % 4) << 3;
-                        eachCpu[fileIndex] = eachCpu[fileIndex] ^ ((((ulong)(tempCpu)) & 0xff) << shift);
-                        cpuIndex++;
-                        if (cpuIndex % 4 == 0){
-                            fileIndex++;
-                        }
-                    }
-
-                    systemInfo = new Microsoft.VisualBasic.Devices.ComputerInfo();
-
-                    //Checking System Total Physical Memory
-                    ulong systemTotalPhysicalMem = systemInfo.TotalPhysicalMemory;
-
-                    //Checkinh System Available Phisycal Memory
-                    ulong systemAvailableMem = systemInfo.AvailablePhysicalMemory;
-
-                    //Checking System Total Virtual Memory
-                    ulong systemTotalVirtualMem = systemInfo.TotalVirtualMemory;
-
-                    //Checkinh System Avilable Virtual Memory
-                    ulong systemAvailableVirtualMem = systemInfo.AvailableVirtualMemory;
-
-
-                    //for each processes
-                    foreach (Process p in listPs)
-                    {
-                        var writeValueList = new List<ulong>();
-
-
-
-                        //Checking System CPU
-                        writeValueList.Add(systemCpu);  // #0
-
-                        //Checking System CPU MA
-                        writeValueList.Add(systemCpuMA);  // #1
-
-                        //
-                        writeValueList.Add(eachCpu[0]);   //#2
-
-                        writeValueList.Add(eachCpu[1]);   //#3
-
-                        writeValueList.Add(eachCpu[2]);   //#4
-
-                        writeValueList.Add(eachCpu[3]);   //#5
-
-
-
-
-                        //Checking System Total Physical Memory
-                        writeValueList.Add(systemTotalPhysicalMem);  // #6
-
-                        //Checkinh System Available Phisycal Memory
-                        writeValueList.Add(systemAvailableMem);  // #7
-
-                        //Checking System Total Virtual Memory
-                        writeValueList.Add(systemTotalVirtualMem);  // #8
-
-                        //Checkinh System Avilable Virtual Memory
-                        writeValueList.Add(systemTotalVirtualMem);  // #9
-
-
-                        int pid;
-                        if (p != null)
+                        //Check Order
+                        byte[] arraydata = new byte[ORDER_MEM_FILE_SIZE];
+                        byte[] arrayzero = new byte[ORDER_MEM_FILE_SIZE];
+                        using (MemoryMappedViewAccessor accessor = orderMmf.CreateViewAccessor())
                         {
-                            p.Refresh();
-                            pid = p.Id;
+                            accessor.ReadArray<byte>(0, arraydata, 0, ORDER_MEM_FILE_SIZE);
+                            accessor.WriteArray<byte>(0, arrayzero, 0, ORDER_MEM_FILE_SIZE);
+                        }
 
+                        // Check Order
+                        processIdList = new List<int>();
+                        startTimeList = new List<string>();
+                        orderList = new List<int>();
+                        ExtractOrderInfoFromByteArray(arraydata, ref orderList, ref processIdList, ref startTimeList);
 
-                            try
+                        int index = 0;
+                        while (index < orderList.Count())
+                        {
+                            int order = orderList[index];
+                            if (order == 0) { break; }
+                            switch (order)
                             {
-                                if (p.HasExited)
+                                case (int)Order.Add:
+                                    //Create mmf for target process
+                                    int pid;
+                                    string pStartTime;
+                                    Process p;
+
+                                    if (processIdList.Count() > MAX_COUNT_OF_PROCESSES)
+                                    {
+                                        throw new Exception(Resources.ExceptionMsgExceededProcesses);
+                                    }
+
+                                    if (processIdList[index] == 0)
+                                    {
+                                        pid = NO_PROCESS;
+                                        pStartTime = NO_PROCESS_TIMESTRNIG;
+                                        p = null;
+                                    }
+                                    else
+                                    {
+                                        p = System.Diagnostics.Process.GetProcessById(processIdList[index]);
+                                        pid = p.Id;
+                                        pStartTime = p.StartTime.ToString(PROC_INFO_MEM_FILE_TIMEFORMAT);
+                                    }
+
+
+                                    if (pStartTime == startTimeList[index])
+                                    {
+                                        var memFileName = Resources.PrefixMemFileName + pid.ToString() + "_" + startTimeList[index];
+                                        mmfDict[processIdList[index]] = MemoryMappedFile.CreateNew(memFileName, PROC_INFO_MEM_FILE_SIZE);
+                                        multiCalcuDict.Add(pid, new Dictionary<string, Queue<ulong>>());
+                                        multiCalcuDict[pid][MonitorItem.ProcessWorkingSet.ToString()] = new Queue<ulong>();
+                                        multiCalcuDict[pid][MonitorItem.ProcessTotalProcessorTime.ToString()] = new Queue<ulong>();
+                                        multiCalcuDict[pid][MonitorItem.ProcessPrivateMemorySize.ToString()] = new Queue<ulong>();
+                                        movingAverageWsSum[pid] = 0;
+                                        movingAveragePmSum[pid] = 0;
+                                        continuousNonResponding[pid] = 0;
+                                        listPs.Add(p);
+                                    }
+                                    else
+                                    {
+                                        throw (new Exception(Resources.ExceptionMsgSameIdButNotSameStarttime));
+                                    }
+                                    break;
+
+                                case (int)Order.Terminate:
+                                    shouldExit = true;
+                                    break;
+                            }
+                            index++;
+                        }
+
+                        if (counter >= v)
+                        {
+                            counter = 0;
+                            List<Process> nonexistsProcesses = new List<Process>();
+                            // Start to Get Info
+
+                            //Checking System CPU Total
+                            ulong systemCpu = (ulong)(pcCpuTotal.NextValue() * 100);
+
+
+                            //Checking System CPU MA
+                            ulong systemCpuMA = 0;
+
+                            cpuQueue.Enqueue(systemCpu);
+                            movingAverageWsSum[CPU_TOTAL] += systemCpu;
+                            if (cpuQueue.Count > number)
+                            {
+                                movingAverageWsSum[CPU_TOTAL] -= cpuQueue.Dequeue();
+                                systemCpuMA = (ulong)movingAverageWsSum[CPU_TOTAL] / (ulong)number;
+                            }
+
+                            //Each CPU
+                            ulong[] eachCpu = new ulong[EACH_CPU_MEM_FILE_COUNT];
+
+                            int cpuIndex = 0;
+                            int fileIndex = 0;
+                            while (cpuIndex < pcCpuCounterArray.Length)
+                            {
+                                float tempCpu = pcCpuCounterArray[cpuIndex].NextValue();
+                                int shift = (cpuIndex % 4) << 3;
+                                eachCpu[fileIndex] = eachCpu[fileIndex] ^ ((((ulong)(tempCpu)) & 0xff) << shift);
+                                cpuIndex++;
+                                if (cpuIndex % 4 == 0)
                                 {
-                                    nonexistsProcesses.Add(p);
-                                    continue;
+                                    fileIndex++;
                                 }
                             }
-                            catch
+
+                            systemInfo = new Microsoft.VisualBasic.Devices.ComputerInfo();
+
+                            //Checking System Total Physical Memory
+                            ulong systemTotalPhysicalMem = systemInfo.TotalPhysicalMemory;
+
+
+                            //Checkinh System Available Phisycal Memory
+                            ulong systemAvailableMem = systemInfo.AvailablePhysicalMemory;
+
+
+                            //Checking System Total Virtual Memory
+                            ulong systemTotalVirtualMem = systemInfo.TotalVirtualMemory;
+
+
+                            //Checkinh System Avilable Virtual Memory
+                            ulong systemAvailableVirtualMem = systemInfo.AvailableVirtualMemory;
+
+                            if (logging)
                             {
-                                nonexistsProcesses.Add(p);
-                                continue;
+                                //System value
+                                sbSysLog = new StringBuilder(512);
+                                sbSysLog.Append(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.sss,"));
+
+                                sbSysLog.Append(systemCpu.ToString());
+                                sbSysLog.Append(',');
+
+                                sbSysLog.Append(systemCpuMA.ToString());
+                                sbSysLog.Append(',');
+
+                                foreach (ulong cpuv in eachCpu)
+                                {
+                                    sbSysLog.Append(cpuv.ToString());
+                                    sbSysLog.Append(',');
+                                }
+
+                                sbSysLog.Append(systemTotalPhysicalMem.ToString());
+                                sbSysLog.Append(',');
+
+                                sbSysLog.Append(systemAvailableMem.ToString());
+                                sbSysLog.Append(',');
+
+                                sbSysLog.Append(systemTotalVirtualMem.ToString());
+                                sbSysLog.Append(',');
+
+                                sbSysLog.Append(systemAvailableVirtualMem.ToString());
+
+                                await writerSystemLog.WriteLineAsync(sbSysLog.ToString());
                             }
 
-                            if (!multiCalcuDict.ContainsKey(pid))
+                            //for each processes
+                            foreach (Process p in listPs)
                             {
-                                throw (new KeyNotFoundException(Resources.ExceptionMsgKeyNotFoundInDict + pid.ToString()));
+
+                                var writeValueList = new List<ulong>();
+
+                                //Checking System CPU
+                                writeValueList.Add(systemCpu);  // #0
+
+                                //Checking System CPU MA
+                                writeValueList.Add(systemCpuMA);  // #1
+
+                                //
+                                writeValueList.Add(eachCpu[0]);   //#2
+
+                                writeValueList.Add(eachCpu[1]);   //#3
+
+                                writeValueList.Add(eachCpu[2]);   //#4
+
+                                writeValueList.Add(eachCpu[3]);   //#5
+
+                                //Checking System Total Physical Memory
+                                writeValueList.Add(systemTotalPhysicalMem);  // #6
+
+                                //Checkinh System Available Phisycal Memory
+                                writeValueList.Add(systemAvailableMem);  // #7
+
+                                //Checking System Total Virtual Memory
+                                writeValueList.Add(systemTotalVirtualMem);  // #8
+
+                                //Checkinh System Avilable Virtual Memory
+                                writeValueList.Add(systemTotalVirtualMem);  // #9
+
+
+                                int pid;
+                                if (p != null)
+                                {
+                                    p.Refresh();
+                                    pid = p.Id;
+
+                                    try
+                                    {
+                                        if (p.HasExited)
+                                        {
+                                            nonexistsProcesses.Add(p);
+                                            continue;
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        nonexistsProcesses.Add(p);
+                                        continue;
+                                    }
+
+                                    if (!multiCalcuDict.ContainsKey(pid))
+                                    {
+                                        throw (new KeyNotFoundException(Resources.ExceptionMsgKeyNotFoundInDict + pid.ToString()));
+                                    }
+
+
+
+
+                                    // Get WorkingSet
+                                    var workingset = (ulong)p.WorkingSet64;
+                                    writeValueList.Add(workingset);  // #10
+
+
+
+                                    // Calculate Moving Average of Workingset
+                                    ulong workingsetMa = 0;
+                                    multiCalcuDict[pid][MonitorItem.ProcessWorkingSet.ToString()].Enqueue(workingset);
+                                    movingAverageWsSum[pid] += workingset;
+                                    if (multiCalcuDict[pid][MonitorItem.ProcessWorkingSet.ToString()].Count > number)
+                                    {
+                                        movingAverageWsSum[pid] -= multiCalcuDict[pid][MonitorItem.ProcessWorkingSet.ToString()].Dequeue();
+                                        workingsetMa = (ulong)movingAverageWsSum[pid] / (ulong)number;
+                                    }
+                                    writeValueList.Add(workingsetMa);  // #11
+
+
+                                    // Get PrivateMemorySize
+                                    var privatememory = (ulong)p.PrivateMemorySize64;
+                                    writeValueList.Add(privatememory);  // #12
+
+
+
+                                    //Get PrivateMemorySizeMA
+                                    ulong privateMemoryMa = 0;
+                                    multiCalcuDict[pid][MonitorItem.ProcessPrivateMemorySize.ToString()].Enqueue(privatememory);
+                                    movingAveragePmSum[pid] += privatememory;
+                                    if (multiCalcuDict[pid][MonitorItem.ProcessPrivateMemorySize.ToString()].Count > number)
+                                    {
+                                        movingAveragePmSum[pid] -= multiCalcuDict[pid][MonitorItem.ProcessPrivateMemorySize.ToString()].Dequeue();
+                                        privateMemoryMa = (ulong)movingAveragePmSum[pid] / (ulong)number;
+                                    }
+                                    writeValueList.Add(privateMemoryMa);  // #13
+
+
+
+
+
+                                    // TotalManagedMemoryFromGC
+                                    var totalMangedMemory = (ulong)GC.GetTotalMemory(false);
+                                    writeValueList.Add(totalMangedMemory);  // #14
+
+
+
+                                    // Get Cputime
+                                    var cpuTotalTime = (ulong)(p.TotalProcessorTime.TotalMilliseconds);
+                                    writeValueList.Add(cpuTotalTime);  // #15
+
+
+                                    // Calculate Delta CpuTime
+                                    ulong cpuTotalTimeDelta = 0;
+                                    multiCalcuDict[pid][MonitorItem.ProcessTotalProcessorTime.ToString()].Enqueue(cpuTotalTime);
+                                    if (multiCalcuDict[pid][MonitorItem.ProcessTotalProcessorTime.ToString()].Count > number)
+                                    {
+                                        cpuTotalTimeDelta = cpuTotalTime - multiCalcuDict[pid][MonitorItem.ProcessTotalProcessorTime.ToString()].Dequeue();
+                                    }
+                                    writeValueList.Add(cpuTotalTimeDelta);  // #16
+
+                                    //Check Responding
+                                    var responding = p.Responding;
+                                    writeValueList.Add((ulong)(responding ? 1 : 0)); // #17
+
+                                    if (!responding)
+                                    {
+                                        continuousNonResponding[pid]++;
+                                    }
+                                    else
+                                    {
+                                        continuousNonResponding[pid] = 0;
+                                    }
+                                    writeValueList.Add(continuousNonResponding[pid]);  //#18
+
+
+                                    //Logging
+                                    if (logging)
+                                    {
+                                        sbProcLog = new StringBuilder(1024);
+                                        sbProcLog.Append(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.sss,"));
+                                        sbProcLog.Append(pid.ToString());
+                                        sbProcLog.Append(',');
+
+                                        sbProcLog.Append(workingset.ToString());
+                                        sbProcLog.Append(',');
+
+                                        sbProcLog.Append(workingsetMa.ToString());
+                                        sbProcLog.Append(',');
+
+                                        sbProcLog.Append(privatememory.ToString());
+                                        sbProcLog.Append(',');
+
+                                        sbProcLog.Append(privateMemoryMa.ToString());
+                                        sbProcLog.Append(',');
+
+                                        sbProcLog.Append(totalMangedMemory.ToString());
+                                        sbProcLog.Append(',');
+
+                                        sbProcLog.Append(cpuTotalTime.ToString());
+                                        sbProcLog.Append(',');
+
+                                        sbProcLog.Append(cpuTotalTimeDelta.ToString());
+                                        sbProcLog.Append(',');
+
+                                        sbProcLog.Append(responding.ToString());
+                                        sbProcLog.Append(',');
+
+                                        sbProcLog.Append(continuousNonResponding[pid].ToString());
+
+
+                                        await writerProcessLog.WriteLineAsync(sbProcLog.ToString());
+
+
+                                    }
+
+                                }
+                                else
+                                {
+                                    pid = 0;
+                                }
+
+                                // Write to mmf of target pid
+                                using (MemoryMappedViewAccessor accessor = mmfDict[pid].CreateViewAccessor())
+                                {
+                                    accessor.WriteArray<ulong>(0, writeValueList.ToArray(), 0, writeValueList.Count());
+                                }
                             }
-
-
-                            // Get WorkingSet
-                            var workingset = (ulong)p.WorkingSet64;
-                            writeValueList.Add(workingset);  // #10
-
-
-                            // Calculate Moving Average of Workingset
-                            ulong workingsetMa = 0;
-                            multiCalcuDict[pid][MonitorItem.ProcessWorkingSet.ToString()].Enqueue(workingset);
-                            movingAverageWsSum[pid] += workingset;
-                            if (multiCalcuDict[pid][MonitorItem.ProcessWorkingSet.ToString()].Count >= number)
+                            foreach (Process p in nonexistsProcesses)
                             {
-                                movingAverageWsSum[pid] -= multiCalcuDict[pid][MonitorItem.ProcessWorkingSet.ToString()].Dequeue();
-                                workingsetMa = (ulong)movingAverageWsSum[pid] / (ulong)number;
+                                if (p != null)
+                                {
+                                    mmfDict[p.Id].Dispose();
+                                    multiCalcuDict.Remove(p.Id);
+                                    listPs.Remove(p);
+                                }
                             }
-                            writeValueList.Add(workingsetMa);  // #11
-
-
-                            // Get PrivateMemorySize
-                            var privatememory = (ulong)p.PrivateMemorySize64;
-                            writeValueList.Add(privatememory);  // #12
-
-                            //Get PrivateMemorySizeMA
-                            ulong privateMemoryMa = 0;
-                            multiCalcuDict[pid][MonitorItem.ProcessPrivateMemorySize.ToString()].Enqueue(privatememory);
-                            movingAveragePmSum[pid] += privatememory;
-                            if (multiCalcuDict[pid][MonitorItem.ProcessPrivateMemorySize.ToString()].Count >= number)
-                            {
-                                movingAveragePmSum[pid] -= multiCalcuDict[pid][MonitorItem.ProcessPrivateMemorySize.ToString()].Dequeue();
-                                privateMemoryMa = (ulong)movingAveragePmSum[pid] / (ulong)number;
-                            }
-                            writeValueList.Add(privateMemoryMa);  // #13
-
-
-
-
-
-                            // TotalManagedMemoryFromGC
-                            var totalMangedMemory = (ulong)GC.GetTotalMemory(false);
-                            writeValueList.Add(totalMangedMemory);  // #14
-
-
-
-                            // Get Cputime
-                            var cpuTotalTime = (ulong)(p.TotalProcessorTime.TotalMilliseconds);
-                            writeValueList.Add(cpuTotalTime);  // #15
-
-
-                            // Calculate Delta CpuTime
-                            ulong cpuTotalTimeDelta = 0;
-                            multiCalcuDict[pid][MonitorItem.ProcessTotalProcessorTime.ToString()].Enqueue(cpuTotalTime);
-                            if (multiCalcuDict[pid][MonitorItem.ProcessTotalProcessorTime.ToString()].Count >= number)
-                            {
-                                cpuTotalTimeDelta = cpuTotalTime - multiCalcuDict[pid][MonitorItem.ProcessTotalProcessorTime.ToString()].Dequeue();
-                            }
-                            writeValueList.Add(cpuTotalTimeDelta);  // #16
-
-                            //Check Responding
-                            var responding = p.Responding;
-                            writeValueList.Add((ulong)(responding ? 1 : 0)); // #17
-
-                            if (!responding)
-                            {
-                                continuousNonResponding[pid]++;
-                            }
-                            else
-                            {
-                                continuousNonResponding[pid] = 0;
-                            }
-                            writeValueList.Add(continuousNonResponding[pid]);  //#18
-
                         }
-                        else
-                        {
-                            pid = 0;
-                        }
 
-                        // Write to mmf of target pid
-                        using (MemoryMappedViewAccessor accessor = mmfDict[pid].CreateViewAccessor())
-                        {
-                            accessor.WriteArray<ulong>(0, writeValueList.ToArray(), 0, writeValueList.Count());
-                        }
-                    }
-                    foreach(Process p in nonexistsProcesses)
-                    {
-                        if (p != null)
-                        {
-                            mmfDict[p.Id].Dispose();
-                            multiCalcuDict.Remove(p.Id);
-                            listPs.Remove(p);
-                        }
+                        Thread.Sleep(ORDER_CHECK_INTERVAL);
                     }
                 }
-
-                Thread.Sleep(ORDER_CHECK_INTERVAL);
             }
-
 
             //Termination
             foreach(MemoryMappedFile mmf in mmfDict.Values)
